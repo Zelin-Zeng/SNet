@@ -3,6 +3,8 @@
 #include <cstdint>
 #include "network/Socket.h"
 
+#include "system/EPollController.h"
+
 namespace SNet {
 
 namespace Version

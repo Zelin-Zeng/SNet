@@ -28,12 +28,26 @@ void printVersion()
 }
 
 void runtest() {
-    SNet::Network::Socket socket;
-    SNet::Network::IPAddress ipAddress;
-    socket.Bind(ipAddress);
-    socket.Listen();
-    std::pair<int, SNet::Network::IPAddress> clientConnectionInfo = socket.Accept();
-    std::cout << "Starting to read file description: " << clientConnectionInfo.first << std::endl;
+    int fd = ::open("../README.md", O_RDONLY);
+    std::shared_ptr<SNet::System::IOChannel> spChannel = std::make_shared<SNet::System::IOChannel>(fd);
+    std::shared_ptr<SNet::System::EPollController> spEpollController = std::make_unique<SNet::System::EPollController>();
+    auto readCB = [fd, spEpollController, spChannel]() {
+        std::cout << "Start reading file" << std::endl;
+        std::string buffer(1024, '\0');
+        ::read(fd, buffer.data(), 1024);
+        std::cout << buffer << std::endl;
+        spEpollController->UnregisterChannel(spChannel);
+    };
+    spChannel->SetCallback(SNet::System::IOChannel::CallbackType::OnReceive, std::move(readCB));
+
+    auto closeCB = [fd]() {
+        std::cout << "Closing file" << std::endl;
+        ::close(fd);
+    };
+    spChannel->SetCallback(SNet::System::IOChannel::CallbackType::OnClose, std::move(closeCB));
+    spEpollController->RegisterChannel(spChannel);
+    spEpollController->Poll();
+    ::sleep(5);
 }
 
 int main(int argc, char *argv[])
