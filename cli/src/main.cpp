@@ -27,6 +27,15 @@ void printVersion()
     println(buffer.str());
 }
 
+void runtest() {
+    SNet::Network::Socket socket;
+    SNet::Network::IPAddress ipAddress;
+    socket.Bind(ipAddress);
+    socket.Listen();
+    std::pair<int, SNet::Network::IPAddress> clientConnectionInfo = socket.Accept();
+    std::cout << "Starting to read file description: " << clientConnectionInfo.first << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
     std::vector<std::string> params;
@@ -52,6 +61,12 @@ int main(int argc, char *argv[])
     if (params[1] == "-h")
     {
         printHelp();
+        return 0;
+    }
+
+    if (params[1] == "-t")
+    {
+        runtest();
         return 0;
     }
 
